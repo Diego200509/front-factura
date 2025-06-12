@@ -10,8 +10,8 @@ interface InvoiceItemInput {
 }
 
 export default function CreateInvoice() {
-  const [customerName, setCustomerName] = useState<string>('');
-  const [date, setDate] = useState<string>(
+  const [customerName, setCustomerName] = useState('');
+  const [date, setDate] = useState(
     new Date().toISOString().substring(0, 10)
   );
   const [items, setItems] = useState<InvoiceItemInput[]>([
@@ -19,109 +19,96 @@ export default function CreateInvoice() {
   ]);
   const navigate = useNavigate();
 
-  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setCustomerName(e.target.value);
-  };
-
-  const handleDateChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setDate(e.target.value);
-  };
-
   const addItem = () => {
-    setItems((current) => [
-      ...current,
-      { productName: '', quantity: 1, unitPrice: 0 },
-    ]);
+    setItems(c => [...c, { productName: '', quantity: 1, unitPrice: 0 }]);
   };
 
-  const handleItemChange = (
+  const handleItem = (
     idx: number,
     key: keyof InvoiceItemInput,
     e: ChangeEvent<HTMLInputElement>
   ) => {
-    const value =
-      key === 'productName' ? e.target.value : +e.target.value;
-    setItems((current) =>
-      current.map((it, i) =>
-        i === idx ? { ...it, [key]: value } : it
+    const val = key === 'productName'
+      ? e.target.value
+      : +e.target.value;
+    setItems(c =>
+      c.map((it, i) =>
+        i === idx ? { ...it, [key]: val } : it
       )
     );
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    const payload = { customerName, date, items };
-    const res = await api.post<{ id: string }>('/invoices', payload);
+    const res = await api.post<{ id: string }>('/invoices', {
+      customerName, date, items
+    });
     navigate(`/invoices/${res.data.id}`);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4">
-      <div>
+    <form onSubmit={submit} className="card">
+      <h1>Crear factura</h1>
+
+      <div className="form-group">
         <label>Cliente:</label>
         <input
-          type="text"
+          className="input"
           value={customerName}
-          onChange={handleNameChange}
-          className="border p-1"
+          onChange={e => setCustomerName(e.target.value)}
         />
       </div>
 
-      <div>
+      <div className="form-group">
         <label>Fecha:</label>
         <input
           type="date"
+          className="input"
           value={date}
-          onChange={handleDateChange}
-          className="border p-1"
+          onChange={e => setDate(e.target.value)}
         />
       </div>
 
-      <div>
-        <h3>Items</h3>
+      <div className="form-group">
+        <h2>Items</h2>
         {items.map((it, i) => (
-          <div key={i} className="flex space-x-2">
+          <div
+            key={i}
+            style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}
+          >
             <input
+              className="input"
               placeholder="Producto"
               value={it.productName}
-              onChange={(e) =>
-                handleItemChange(i, 'productName', e)
-              }
-              className="border p-1 flex-1"
+              onChange={e => handleItem(i, 'productName', e)}
+              style={{ flex: 2 }}
             />
+            <label>Cantidad:</label>
             <input
               type="number"
+              className="input"
               placeholder="Cant."
               value={it.quantity}
-              onChange={(e) =>
-                handleItemChange(i, 'quantity', e)
-              }
-              className="border p-1 w-20"
+              onChange={e => handleItem(i, 'quantity', e)}
+              style={{ width: '4rem' }}
             />
+            <label>Precio Unitario:</label>
             <input
               type="number"
+              className="input"
               placeholder="Precio"
               value={it.unitPrice}
-              onChange={(e) =>
-                handleItemChange(i, 'unitPrice', e)
-              }
-              className="border p-1 w-20"
+              onChange={e => handleItem(i, 'unitPrice', e)}
+              style={{ width: '6rem' }}
             />
           </div>
         ))}
-        <button
-          type="button"
-          onClick={addItem}
-          className="mt-2 text-blue-500"
-        >
+        <button type="button" className="button" onClick={addItem}>
           + Añadir ítem
         </button>
       </div>
 
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-2"
-      >
+      <button type="submit" className="button">
         Crear
       </button>
     </form>

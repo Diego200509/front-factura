@@ -8,42 +8,36 @@ export default function InvoiceDetail() {
 
   const { data: invoice, isLoading, error } = useQuery<Invoice, Error>({
     queryKey: ['invoice', id],
-    queryFn: async () => {
-      const res = await api.get<Invoice>(`/invoices/${id}`);
-      return res.data;
-    },
-    enabled: Boolean(id), // sólo corre si id existe
+    queryFn: async () => (await api.get<Invoice>(`/invoices/${id}`)).data,
+    enabled: Boolean(id),
   });
 
   if (isLoading) return <p>Cargando...</p>;
-  if (error)     return <p>Error al cargar la factura</p>;
+  if (error)     return <p style={{ color: 'red' }}>Error al cargar</p>;
   if (!invoice)  return <p>Factura no encontrada</p>;
 
   return (
-    <div className="p-4">
-      <Link to="/" className="text-blue-500">
-        &larr; Volver
-      </Link>
+    <div>
+      <Link to="/">← Volver</Link>
+      <h1>Factura {invoice.id}</h1>
+      <p><strong>Cliente:</strong> {invoice.customerName}</p>
+      <p><strong>Fecha:</strong> {new Date(invoice.date).toLocaleDateString()}</p>
 
-      <h1 className="text-2xl font-bold mt-2">Factura {invoice.id}</h1>
-      <p>Cliente: {invoice.customerName}</p>
-      <p>Fecha: {new Date(invoice.date).toLocaleDateString()}</p>
-
-      <h2 className="mt-4 font-semibold">Items</h2>
-      <table className="min-w-full table-auto border mt-2">
+      <h2>Items</h2>
+      <table className="table">
         <thead>
           <tr>
-            <th className="border px-2 py-1">Producto</th>
-            <th className="border px-2 py-1">Cant.</th>
-            <th className="border px-2 py-1">Precio</th>
+            <th>Producto</th>
+            <th>Cant.</th>
+            <th>Precio</th>
           </tr>
         </thead>
         <tbody>
-          {invoice.items.map((it) => (
+          {invoice.items.map(it => (
             <tr key={it.id}>
-              <td className="border px-2 py-1">{it.productName}</td>
-              <td className="border px-2 py-1">{it.quantity}</td>
-              <td className="border px-2 py-1">{it.unitPrice}</td>
+              <td>{it.productName}</td>
+              <td>{it.quantity}</td>
+              <td>{it.unitPrice}</td>
             </tr>
           ))}
         </tbody>

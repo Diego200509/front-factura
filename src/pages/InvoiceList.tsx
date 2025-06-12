@@ -1,92 +1,85 @@
-import { useState, useEffect } from "react";
-import { useInvoices } from "../api/useInvoices";
-import type { Invoice } from "../api/types";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useInvoices } from '../api/useInvoices';
+import type { Invoice } from '../api/types';
+import { useNavigate } from 'react-router-dom';
 
 export default function InvoiceList() {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
-  const [rawFilter, setRawFilter] = useState("");
-  const [filter, setFilter] = useState("");
+  const [rawFilter, setRawFilter] = useState('');
+  const [filter, setFilter] = useState('');
   useEffect(() => {
-    const handle = setTimeout(() => {
+    const h = setTimeout(() => {
       setFilter(rawFilter);
-      setPage(1); 
+      setPage(1);
     }, 300);
-    return () => clearTimeout(handle);
+    return () => clearTimeout(h);
   }, [rawFilter]);
-  const { data: invoices = [], isLoading, error } = useInvoices(
-    page,
-    pageSize,
-    filter
-  );
+
+  const { data: invoices = [], isLoading, error } =
+    useInvoices(page, pageSize, filter);
 
   const navigate = useNavigate();
 
   if (isLoading) return <p>Cargando facturas…</p>;
-  if (error) return <p className="text-red-600">Error: {error.message}</p>;
+  if (error) return <p style={{ color: 'red' }}>Error: {error.message}</p>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Facturas</h1>
+    <>
+      <h1>Facturas</h1>
 
-      {/* Campo de búsqueda */}
-      <div className="mb-4">
+      <div className="form-group">
+        <label>Buscar cliente:</label>
         <input
-          type="text"
-          placeholder="Buscar cliente..."
+          className="input"
+          placeholder="Nombre del cliente…"
           value={rawFilter}
-          onChange={(e) => setRawFilter(e.target.value)}
-          className="border p-2 w-full max-w-sm"
+          onChange={e => setRawFilter(e.target.value)}
         />
       </div>
 
-      {/* Tabla de resultados */}
-      <table className="min-w-full table-auto border">
+      <table className="table">
         <thead>
           <tr>
-            <th className="px-4 py-2 border">ID</th>
-            <th className="px-4 py-2 border">Cliente</th>
-            <th className="px-4 py-2 border">Fecha</th>
-            <th className="px-4 py-2 border">Items</th>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Fecha</th>
+            <th>Items</th>
           </tr>
         </thead>
         <tbody>
           {invoices.map((inv: Invoice) => (
             <tr
               key={inv.id}
-              className="cursor-pointer hover:bg-gray-100"
+              style={{ cursor: 'pointer' }}
               onClick={() => navigate(`/invoices/${inv.id}`)}
             >
-              <td className="px-4 py-2 border">{inv.id}</td>
-              <td className="px-4 py-2 border">{inv.customerName}</td>
-              <td className="px-4 py-2 border">
-                {new Date(inv.date).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-2 border">{inv.items.length}</td>
+              <td>{inv.id}</td>
+              <td>{inv.customerName}</td>
+              <td>{new Date(inv.date).toLocaleDateString()}</td>
+              <td>{inv.items.length}</td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Paginación */}
-      <div className="mt-4 flex items-center space-x-2">
+      <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
         <button
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          className="button"
+          onClick={() => setPage(p => Math.max(1, p - 1))}
           disabled={page === 1}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
         >
           Anterior
         </button>
         <span>Página {page}</span>
         <button
-          onClick={() => setPage((p) => p + 1)}
-          className="px-3 py-1 bg-gray-200 rounded"
+          className="button"
+          onClick={() => setPage(p => p + 1)}
         >
           Siguiente
         </button>
       </div>
-    </div>
+    </>
   );
 }
