@@ -1,8 +1,10 @@
 import { useInvoices } from '../api/useInvoices';
 import type { Invoice } from '../api/types';
+import { useNavigate } from 'react-router-dom';
 
 export default function InvoiceList() {
   const { data: invoices, isLoading, error } = useInvoices();
+  const navigate = useNavigate();
 
   if (isLoading) return <p>Cargando facturas…</p>;
   if (error)      return <p>Error: {error.message}</p>;
@@ -21,7 +23,11 @@ export default function InvoiceList() {
         </thead>
         <tbody>
           {invoices!.map((inv: Invoice) => (
-            <tr key={inv.id}>
+            <tr
+              key={inv.id}
+              className="cursor-pointer hover:bg-gray-100"
+              onClick={() => navigate(`/invoices/${inv.id}`)}
+            >
               <td className="px-4 py-2 border">{inv.id}</td>
               <td className="px-4 py-2 border">{inv.customerName}</td>
               <td className="px-4 py-2 border">
