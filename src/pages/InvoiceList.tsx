@@ -1,36 +1,48 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../api/invoices';
-import type { Invoice } from '../api/types';
+import { useState, useEffect } from "react";
+import { useInvoices } from "../api/useInvoices";
+import type { Invoice } from "../api/types";
+import { useNavigate } from "react-router-dom";
 
 export default function InvoiceList() {
-  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
-  const {
-    data: invoices = [],
-    isLoading,
-    isError,
-    error,
-  } = useQuery<Invoice[], Error>({
-    queryKey: ['invoices', page],
-    queryFn: async () => {
-      const res = await api.get<Invoice[]>(
-        `/invoices?page=${page}&pageSize=${pageSize}`
-      );
-      return res.data;
-    },
-  });
+  const [rawFilter, setRawFilter] = useState("");
+  const [filter, setFilter] = useState("");
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setFilter(rawFilter);
+      setPage(1); 
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [rawFilter]);
+  const { data: invoices = [], isLoading, error } = useInvoices(
+    page,
+    pageSize,
+    filter
+  );
+
+  const navigate = useNavigate();
 
   if (isLoading) return <p>Cargando facturas…</p>;
-  if (isError)   return <p>Error: {error.message}</p>;
+  if (error) return <p className="text-red-600">Error: {error.message}</p>;
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Facturas</h1>
 
+      {/* Campo de búsqueda */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Buscar cliente..."
+          value={rawFilter}
+          onChange={(e) => setRawFilter(e.target.value)}
+          className="border p-2 w-full max-w-sm"
+        />
+      </div>
+
+      {/* Tabla de resultados */}
       <table className="min-w-full table-auto border">
         <thead>
           <tr>
@@ -59,27 +71,18 @@ export default function InvoiceList() {
       </table>
 
       {/* Paginación */}
-      <div className="mt-4 flex items-center space-x-4">
+      <div className="mt-4 flex items-center space-x-2">
         <button
-          onClick={() => setPage((p) => Math.max(p - 1, 1))}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1}
           className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
         >
           Anterior
         </button>
-
-        <span>
-          Página <strong>{page}</strong>
-        </span>
-
+        <span>Página {page}</span>
         <button
-          onClick={() => {
-            if (invoices.length === pageSize) {
-              setPage((p) => p + 1);
-            }
-          }}
-          disabled={invoices.length < pageSize}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          onClick={() => setPage((p) => p + 1)}
+          className="px-3 py-1 bg-gray-200 rounded"
         >
           Siguiente
         </button>

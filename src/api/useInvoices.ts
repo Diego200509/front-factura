@@ -3,14 +3,26 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "./invoices";
 import type { Invoice } from "./types";
 
-export function useInvoices() {
+export function useInvoices(
+  page: number,
+  pageSize: number,
+  customerName: string
+) {
+  const key = ["invoices", page, pageSize, customerName] as const;
+
+  const fetchInvoices = async (): Promise<Invoice[]> => {
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+      ...(customerName ? { customerName } : {}),
+    });
+    const res = await api.get<Invoice[]>(`/invoices?${params}`);
+    return res.data;
+  };
+
   return useQuery<Invoice[], Error>({
-    // 1) queryKey
-    queryKey: ["invoices"],
-    // 2) queryFn
-    queryFn: async () => {
-      const response = await api.get<Invoice[]>("/invoices");
-      return response.data;
-    },
+    queryKey: key,
+    queryFn: fetchInvoices,
+    staleTime: 5_000,
   });
 }
