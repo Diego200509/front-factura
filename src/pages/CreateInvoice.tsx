@@ -13,8 +13,6 @@ interface InvoiceItemInput {
 
 export default function CreateInvoice() {
   const navigate = useNavigate();
-
-  // Obtener clientes y productos
   const { data: customers = [] } = useCustomers();
   const { data: products = [] } = useProducts();
 
@@ -25,7 +23,7 @@ export default function CreateInvoice() {
   ]);
 
   const addItem = () => {
-    setItems((c) => [...c, { productName: '', quantity: 1, unitPrice: 0 }]);
+    setItems([...items, { productName: '', quantity: 1, unitPrice: 0 }]);
   };
 
   const handleItemChange = (
@@ -35,7 +33,6 @@ export default function CreateInvoice() {
   ) => {
     let value: string | number = e.target.value;
 
-    // Si cambia el producto, actualizar también el precio unitario
     if (key === 'productName') {
       const selectedProduct = products.find((p) => p.name === value);
       setItems((c) =>
@@ -50,9 +47,7 @@ export default function CreateInvoice() {
         )
       );
     } else {
-      if (key === 'quantity' || key === 'unitPrice') {
-        value = Number(value);
-      }
+      if (key === 'quantity' || key === 'unitPrice') value = Number(value);
       setItems((c) =>
         c.map((item, i) => (i === idx ? { ...item, [key]: value } : item))
       );
@@ -68,6 +63,10 @@ export default function CreateInvoice() {
     });
     navigate(`/invoices/${res.data.id}`);
   };
+
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const tax = subtotal * 0.15;
+  const total = subtotal + tax;
 
   return (
     <form onSubmit={submit} className="card">
@@ -104,7 +103,12 @@ export default function CreateInvoice() {
         {items.map((it, i) => (
           <div
             key={i}
-            style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}
+            style={{
+              display: 'flex',
+              gap: '0.5rem',
+              marginBottom: '0.5rem',
+              alignItems: 'center',
+            }}
           >
             <select
               className="input"
@@ -139,10 +143,41 @@ export default function CreateInvoice() {
             />
           </div>
         ))}
+
         <button type="button" className="button" onClick={addItem}>
           + Añadir ítem
         </button>
       </div>
+
+      {/* Totales alineados debajo de Cant. y Precio */}
+<div
+  className="form-group"
+  style={{
+    display: 'flex',
+    justifyContent: 'flex-start',
+    marginTop: '1rem',
+  }}
+>
+  <div
+    style={{
+      marginLeft: 'auto',
+      width: '220px',
+    }}
+  >
+    <p style={{ textAlign: 'right', marginBottom: '0.25rem' }}>
+      <strong>Subtotal:</strong>{' '}
+      <span>${subtotal.toFixed(2)}</span>
+    </p>
+    <p style={{ textAlign: 'right', marginBottom: '0.25rem' }}>
+      <strong>IVA (15%):</strong>{' '}
+      <span>${tax.toFixed(2)}</span>
+    </p>
+    <p style={{ textAlign: 'right' }}>
+      <strong>Total:</strong>{' '}
+      <span>${total.toFixed(2)}</span>
+    </p>
+  </div>
+</div>
 
       <button type="submit" className="button">
         Crear

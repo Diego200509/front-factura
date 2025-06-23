@@ -13,8 +13,15 @@ export default function InvoiceDetail() {
   });
 
   if (isLoading) return <p>Cargando...</p>;
-  if (error)     return <p style={{ color: 'red' }}>Error al cargar</p>;
-  if (!invoice)  return <p>Factura no encontrada</p>;
+  if (error) return <p style={{ color: 'red' }}>Error al cargar</p>;
+  if (!invoice) return <p>Factura no encontrada</p>;
+
+  const subtotal = invoice.items.reduce(
+    (sum, item) => sum + item.quantity * item.unitPrice,
+    0
+  );
+  const tax = subtotal * 0.15;
+  const total = subtotal + tax;
 
   return (
     <div>
@@ -33,7 +40,7 @@ export default function InvoiceDetail() {
           </tr>
         </thead>
         <tbody>
-          {invoice.items.map(it => (
+          {invoice.items.map((it) => (
             <tr key={it.id}>
               <td>{it.productName}</td>
               <td>{it.quantity}</td>
@@ -42,6 +49,27 @@ export default function InvoiceDetail() {
           ))}
         </tbody>
       </table>
+
+      {/* Resumen alineado debajo de Cant. y Precio */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-start',
+          marginTop: '1rem',
+        }}
+      >
+        <div style={{ marginLeft: 'auto', width: '220px' }}>
+          <p style={{ textAlign: 'right', marginBottom: '0.25rem' }}>
+            <strong>Subtotal:</strong> ${subtotal.toFixed(2)}
+          </p>
+          <p style={{ textAlign: 'right', marginBottom: '0.25rem' }}>
+            <strong>IVA (15%):</strong> ${tax.toFixed(2)}
+          </p>
+          <p style={{ textAlign: 'right' }}>
+            <strong>Total:</strong> ${total.toFixed(2)}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
